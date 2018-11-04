@@ -1,25 +1,43 @@
-import unittest
+from unittest import TestCase
 
 from src.zad1 import SimpleFlex
 
 
-class TestZad1(unittest.TestCase):
+class TestZad1(TestCase):
     def setUp(self):
         self.m = SimpleFlex()
 
     def test_strip(self):
-        self.m.test("   asdfsad asdasd asdasda    ")
+        given = "   asdfsad asdasd asdasda    "
+        expected = "asdfsad asdasd asdasda\n1\n3"
+
+        result = self.m.test(given)
+
+        self.assertEqual(expected, result)
 
     def test_trim_tabs_into_space(self):
-        self.m.test("asdfsad \tasdasd   asdasda")
+        given = "asdfsad \tasdasd   asdasda"
+        expected = "asdfsad asdasd asdasda\n1\n3"
 
-    def test_trim_multiple_spaces(self):
-        self.m.test("   asdfsad       asdasd          asdasda    ")
+        result = self.m.test(given)
+
+        self.assertEqual(expected, result)
+
+    def test_strip_whitespace(self):
+        given = "   asdfsad       asdasd          asdasda    "
+        expected = "asdfsad asdasd asdasda\n1\n3"
+
+        result = self.m.test(given)
+
+        self.assertEqual(expected, result)
 
     def test_remove_blank_lines(self):
-        self.m.test("   asdfsad  \n"
-                    "  \n   "
-                    "asdasd          asdasda    ")
+        given = "   asdfsad  \n  \n   asdasd          asdasda    "
+        expected = "asdfsad\nasdasd asdasda\n2\n3"
+
+        result = self.m.test(given)
+
+        self.assertEqual(expected, result)
 
     def test_LineCount(self):
         self.m.test("1\n2  \n3 \n4")

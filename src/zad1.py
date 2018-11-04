@@ -6,25 +6,33 @@ class SimpleFlex:
         'WHITESPACE',
         'NEWLINE',
         'WORD',
-        'WHITESPACE_BEGINNING_OR_END'
+        'WHITESPACE_BEGINNING',
+        'WHITESPACE_END'
     )
 
     def __init__(self, **kwargs):
         self.word_counter = 0
         self.lexer = lex.lex(module=self, **kwargs)
 
-    def t_WHITESPACE_BEGINNING_OR_END(self, t):
-        r'^[^\S\n]+|[^\S\n]+$'
-        t.value = " "
+    def t_WHITESPACE_BEGINNING(self, t):
+        r'(^[^\S\n]+)'
+        pass
+
+    def t_WHITESPACE_END(self, t):
+        r'([^\S\n]+\Z)'
         pass
 
     def t_WHITESPACE(self, t):
-        r'[^\S\n]+'
+        r'\s+'
+        if "\n" in t.value:
+            t.value = "\n"
+            t.lexer.lineno += 1
+            return t
         t.value = " "
         return t
 
     def t_NEWLINE(self, t):
-        r'\n+'
+        r'([^\S\n]*\n+[^\S\n]*)+'
         t.value = "\n"
         t.lexer.lineno += 1
         return t
@@ -40,12 +48,13 @@ class SimpleFlex:
 
     def test(self, data):
         self.lexer.input(data)
+        result = ""
 
         while True:
             token = self.lexer.token()
             if not token:
                 break
-            print(token.value, end='')
-        print()
-        print(self.lexer.lineno)
-        print(self.word_counter)
+            result += token.value
+
+        result += "\n" + str(self.lexer.lineno) + "\n" + str(self.word_counter)
+        return result

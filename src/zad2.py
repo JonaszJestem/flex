@@ -1,42 +1,42 @@
 import ply.lex as lex
 
 
-class SimpleFlex:
+class HTMLCommentRemover:
     tokens = (
-        'WHITESPACE',
-        'NEWLINE',
-        'WORD',
-        'WHITESPACE_BEGINNING_OR_END'
+        'HTML',
+    )
+
+    states = (
+        ('comment', 'exclusive'),
     )
 
     def __init__(self, **kwargs):
-        self.word_counter = 0
         self.lexer = lex.lex(module=self, **kwargs)
+        self.html = []
+        self.html_start = 0
 
-    def t_WHITESPACE_BEGINNING_OR_END(self, t):
-        r'^[^\S\n]+|[^\S\n]+$'
-        t.value = " "
+    def t_comment(self, t):
+        r'<!--'
+        self.html.append((self.html_start, t.lexer.lexpos - 4))
+        t.lexer.begin("comment")
         pass
 
-    def t_WHITESPACE(self, t):
-        r'[^\S\n]+'
-        t.value = " "
-        return t
+    def t_comment_end(self, t):
+        r'-->'
+        self.html_start = t.lexer.lexpos
+        t.lexer.begin("INITIAL")
+        pass
 
-    def t_NEWLINE(self, t):
-        r'\n+'
-        t.value = "\n"
-        t.lexer.lineno += 1
-        return t
-
-    def t_WORD(self, t):
-        r'\S+'
-        self.word_counter += 1
-        return t
+    def t_comment_error(self, t):
+        t.lexer.skip(1)
+        pass
 
     def t_error(self, t):
-        print("Illegal character '%s'" % t.value[0])
         t.lexer.skip(1)
+        pass
+
+    def t_eof(self, t):
+        self.html.append((self.html_start, self.lexer.lexpos))
 
     def test(self, data):
         self.lexer.input(data)
@@ -45,7 +45,8 @@ class SimpleFlex:
             token = self.lexer.token()
             if not token:
                 break
-            print(token.value, end='')
-        print()
-        print(self.lexer.lineno)
-        print(self.word_counter)
+
+        result = ""
+        for (start, end) in self.html:
+            result += data[start:end]
+        return result
